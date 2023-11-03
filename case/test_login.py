@@ -18,14 +18,14 @@ class TestLogin(unittest.TestCase):
         # 输入手机号
         el2 = driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/phone_number")
         el2.clear()
-        # el2.send_keys("18034552879")
-        el2.send_keys("19567917615")
+        el2.send_keys("18034552879")
+        # el2.send_keys("19567917615")
 
         # 输入密码
         el3 = driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/password")
         el3.clear()
-        # el3.send_keys("c654321")
-        el3.send_keys("@zhao123456")
+        el3.send_keys("c654321")
+        # el3.send_keys("@zhao123456")
 
         # 选择记住密码
         try:

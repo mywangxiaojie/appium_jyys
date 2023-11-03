@@ -1,19 +1,21 @@
 #  首页com.ibb.tizi/com.ibb.tizi.activity.HomeActivity
 
+import sys
 import unittest
-import sys 
+
 sys.path.append("..") 
-from start_session import driver
-from test_login import TestLogin
+import random
+import re
 
-
-from appium.webdriver.common.appiumby import AppiumBy
-from selenium.webdriver.support.select import Select
-from selenium.webdriver.support.ui import WebDriverWait
 import cv2
 import numpy as np
+from appium.webdriver.common.appiumby import AppiumBy
 from paddleocr import PaddleOCR, draw_ocr
-import re
+from selenium.webdriver.support.select import Select
+from selenium.webdriver.support.ui import WebDriverWait
+from test_login import TestLogin
+
+from start_session import driver
 
 
 class TestOrderReserve(unittest.TestCase):
@@ -220,21 +222,22 @@ class TestOrderReserve(unittest.TestCase):
                     print("方向", i, v.text)
                     str = re.sub("[\：\。\_]", "", v.text)
                     direction=str[2:]
-                    if direction != "山东省滨州市":
+                    if direction != "河北省石家庄市":
                         continue
 
-                    img = img[int(int(bounds_list[1])/2160*h): int(int(bounds_list[3])/2160*h), int(int(bounds_list[0])/1080*w): int(int(bounds_list[2])/1080*w)]
                     try:
+                        img = img[int(int(bounds_list[1])/2160*h): int(int(bounds_list[3])/2160*h), int(int(bounds_list[0])/1080*w): int(int(bounds_list[2])/1080*w)]
                         ocr = PaddleOCR(use_angle_cls=True, lang="ch")  # need to run only once to download and load model into memory
                         result = ocr.ocr(img, cls=True)
                     except:
                         print("识别进厂时间出错......")
+                        cv2.imwrite(f'./tmp/{random_str(12)}.jpg', img)
                         continue
                     else:
                         print(result)
                         in_time=int(re.sub("[\:\-\s+]", "", result[0][1][1][0]))
                         print("预约进厂时间", in_time)
-                        if result[0] is None or in_time < 202310311300 or in_time > 202310311900:
+                        if result[0] is None or in_time < 202311031100 or in_time > 202311031200:
                             continue
                         else:
                             is_swipe=False
@@ -255,6 +258,10 @@ class TestOrderReserve(unittest.TestCase):
 
         # # 预约按钮 com.ibb.tizi:id/btn_sappoint_enter
         # driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/btn_sappoint_enter")
+
+
+        def random_str(count:int)->str:
+            return ''.join(random.sample(['z','y','x','w','v','u','t','s','r','q','p','o','n','m','l','k','j','i','h','g','f','e','d','c','b','a'], count))
      
 if __name__ == "__main__":
     unittest.main()
