@@ -532,6 +532,7 @@ def predict_image(detector, image_file, run_benchmark=True, threshold=0.5):
 
 def main():
     config = Config('./models')
+    print(dir(config))
     detector = Detector(config, './models', use_gpu=False)
     # predict from image
     img_path_list = os.listdir('./imgs')
