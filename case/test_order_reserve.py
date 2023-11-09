@@ -17,6 +17,8 @@ from test_login import TestLogin
 
 from start_session import driver
 
+import easyocr
+
 
 class TestOrderReserve(unittest.TestCase):
 
@@ -136,41 +138,84 @@ class TestOrderReserve(unittest.TestCase):
         if els[0].text == "出厂运输中":
             print("存在出厂运输中的订单，无法继续新的预约.......")
             return
-
-        # 销售预约进厂
-        WebDriverWait(driver, 10, 0.5).until(lambda x: x.find_element(by=AppiumBy.XPATH, value="/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.RelativeLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.RelativeLayout[2]/android.widget.ScrollView/android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.LinearLayout[2]/android.widget.ImageView")).click()
-
-        try:
-            # 判断是否已经存在预约进厂信息
-            WebDriverWait(driver, 3, 0.5).until(lambda driver: driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/ll_sale_enter_info")).click()
-        except:
-            # 没有已经预约进厂信息，开始获取产品列表
-            while True:
-                if len(driver.find_elements(by=AppiumBy.ID, value="com.ibb.tizi:id/tv_text")) == 0:
-                    WebDriverWait(driver, 10, 0.5).until(lambda driver: driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/tv_storeroom")).click()
-                else:
-                    break
-
-            while True:
-                product_list=driver.find_elements(by=AppiumBy.ID, value="com.ibb.tizi:id/tv_text")
+        
+        toast_message = "当前车辆有未处理的黑名单"
+        message = '//*[@text=\'{}\']'.format(toast_message)
+        
+        i=0
+        while True:
+            try:
+                i=i+1
+                print(f"第{i}次判断是否有黑名单待处理......")
+                # 点击销售预约进厂
+                WebDriverWait(driver, 10, 0.5).until(lambda x: x.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/sale_enter_appoint")).click()
+                # toast_element=driver.find_element(by=AppiumBy.ANDROID_UIAUTOMATOR, value='new UiSelector().textContains("当前车辆有未处理的黑名单")')
+                toast_element=driver.find_element(by=AppiumBy.XPATH, value='//*[@class="android.widget.Toast"]')
+            except:
                 try:
-                    # 获取用户想要的产品
-                    # selected_product = driver.find_element(by=AppiumBy.XPATH, value="//*[@text='热轧带肋钢筋']")
-                    selected_product = driver.find_element(by=AppiumBy.XPATH, value="//*[@text='热轧钢卷']")
+                    driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/tv_storeroom")
                 except:
-                    # 当前页没有想要的产品就下拉获取
-                    first_text = product_list[0].text
-                    end_text = product_list[len(product_list)-1].text
-                    start=driver.find_element(by=AppiumBy.XPATH, value=f"//*[@text='{first_text}']")
-                    end=driver.find_element(by=AppiumBy.XPATH, value=f"//*[@text='{end_text}']")
-                    driver.scroll(end,start,3000)
+                    if i>=5:
+                        break
+                    continue
                 else:
-                    # 找到了想要的产品就点击选择
-                    selected_product.click()
                     break
-        else:
-            print("已经有预约信息，暂时无法继续预约")
-            return
+            else:
+                # 打印toast提示信息
+                # 可能是系统繁忙或者是有未处理的黑名单
+                print(toast_element.text)
+                return
+
+        while True:
+            try:
+                # 判断是否已经存在预约进厂信息
+                driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/ll_sale_enter_info")
+                # WebDriverWait(driver, 3, 0.5).until(lambda driver: driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/ll_sale_enter_info"))
+            except:
+                try:
+                    driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/tv_storeroom")
+                except:
+                    continue
+                else:
+                    print("没有已经预约进厂信息，开始获取产品列表......")
+                    break
+            else:
+                print("已经有预约信息，暂时无法继续预约")
+                return
+        
+        i=0
+        while True:
+            i=i+1
+            print(f"第{i}次获取产品列表......")
+            WebDriverWait(driver, 10, 0.5).until(lambda driver: driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/tv_storeroom")).click()
+            try:
+                tv_text=WebDriverWait(driver, 10, 0.5).until(lambda driver: driver.find_elements(by=AppiumBy.ID, value="com.ibb.tizi:id/tv_text"))
+            except:
+                continue
+            else:
+                if len(tv_text) == 0:
+                    continue
+                else:
+                    break
+        
+        print("开始选择产品.......")
+        while True:
+            product_list=driver.find_elements(by=AppiumBy.ID, value="com.ibb.tizi:id/tv_text")
+            try:
+                # 获取用户想要的产品
+                # selected_product = driver.find_element(by=AppiumBy.XPATH, value="//*[@text='热轧带肋钢筋']")
+                selected_product = driver.find_element(by=AppiumBy.XPATH, value="//*[@text='热轧钢卷']")
+            except:
+                # 当前页没有想要的产品就下拉获取
+                first_text = product_list[0].text
+                end_text = product_list[len(product_list)-1].text
+                start=driver.find_element(by=AppiumBy.XPATH, value=f"//*[@text='{first_text}']")
+                end=driver.find_element(by=AppiumBy.XPATH, value=f"//*[@text='{end_text}']")
+                driver.scroll(end,start,3000)
+            else:
+                # 找到了想要的产品就点击选择
+                selected_product.click()
+                break
         
         # 点击查询
         driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/search").click()
@@ -189,6 +234,7 @@ class TestOrderReserve(unittest.TestCase):
             WebDriverWait(driver, 10, 0.5).until(lambda driver: driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/sale_appoint_list"))
         except:
             print("没有相关产品的派车信息.......")
+            return
         else:
             is_swipe=True
             while True:
@@ -222,7 +268,7 @@ class TestOrderReserve(unittest.TestCase):
                     print("方向", i, v.text)
                     str = re.sub("[\：\。\_]", "", v.text)
                     direction=str[2:]
-                    if direction != "河北省石家庄市":
+                    if direction != "山东省滨州市":
                         continue
 
                     try:
@@ -231,7 +277,11 @@ class TestOrderReserve(unittest.TestCase):
                         result = ocr.ocr(img, cls=True)
                     except:
                         print("识别进厂时间出错......")
-                        cv2.imwrite(f'./tmp/{random_str(12)}.jpg', img)
+                        reader = easyocr.Reader(['ch_sim','en']) # this needs to run only once to load the model into memory
+                        print("easyocr识别", reader.readtext(img))
+                        image_file=f'./tmp/{random_str(12)}.jpg'
+                        print(image_file)
+                        cv2.imwrite(image_file, img)
                         continue
                     else:
                         print(result)
@@ -251,17 +301,33 @@ class TestOrderReserve(unittest.TestCase):
                 else:
                     break
 
-        # product_name=driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/tv_item_steel_goods").text()
+            
+            # 开始处理滑动验证
+            img_array = np.fromstring(driver.get_screenshot_as_png(), np.uint8)
+            # 转换成opencv可用格式
+            img = cv2.imdecode(img_array, cv2.COLOR_RGB2BGR)
+            size = img.shape
+            w = size[1] #宽度
+            h = size[0] #高度
 
-        # area=driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/item_steel_direction").text()
 
 
-        # # 预约按钮 com.ibb.tizi:id/btn_sappoint_enter
-        # driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/btn_sappoint_enter")
 
 
-        def random_str(count:int)->str:
-            return ''.join(random.sample(['z','y','x','w','v','u','t','s','r','q','p','o','n','m','l','k','j','i','h','g','f','e','d','c','b','a'], count))
+
+def random_str(count:int)->str:
+    return ''.join(random.sample(['z','y','x','w','v','u','t','s','r','q','p','o','n','m','l','k','j','i','h','g','f','e','d','c','b','a'], count))
+
+def loading()->bool:
+    try:
+        # toast_element=driver.find_element(by=AppiumBy.XPATH, value='//*[@class="android.widget.Toast"]')
+        toast_element=WebDriverWait(driver, 1, 0.5).until(lambda x: x.find_element(by=AppiumBy.XPATH, value='//*[@class="android.widget.Toast"]')).click()
+    except:
+        return False
+    else:
+        print(toast_element.text)
+        return True
+    
      
 if __name__ == "__main__":
     unittest.main()

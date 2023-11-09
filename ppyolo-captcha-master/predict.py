@@ -537,8 +537,15 @@ def main():
     # predict from image
     img_path_list = os.listdir('./imgs')
     for img in img_path_list:
-        results = predict_image(detector, './imgs/{}'.format(img), run_benchmark=False)
+        results = predict_image(detector, './imgs/{}'.format(img), run_benchmark=False, threshold=0.1)
         print(results, '='*100)
+
+def predict_slider_xy(image_file:str):
+    config = Config('./models')
+    print(dir(config))
+    detector = Detector(config, './models', use_gpu=False)
+    results = predict_image(detector, image_file=image_file, run_benchmark=False, threshold=0.1)
+    print(results, '='*100)
 
 if __name__ == '__main__':
     print('加载模型开始预测>>')

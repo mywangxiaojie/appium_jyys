@@ -43,6 +43,7 @@ class TestPasswordSetAlert(unittest.TestCase):
         # com.ibb.tizi:id/buttonPanel
         # android:id/button1
 
+        # 用一个异步处理 时刻监听该通知弹出
         try:
             WebDriverWait(driver, 10, 0.5).until(lambda driver: driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/parentPanel"))
         except:

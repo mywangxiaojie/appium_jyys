@@ -1,12 +1,14 @@
 
-import sys 
-sys.path.append("..") 
-from start_session import driver
+import sys
 
+sys.path.append("..") 
 import unittest
 
 from appium.webdriver.common.appiumby import AppiumBy
 from selenium.webdriver.support.ui import WebDriverWait
+
+from start_session import driver
+
 
 class TestLogin(unittest.TestCase):
 
@@ -51,7 +53,12 @@ class TestLogin(unittest.TestCase):
 
         # # 隐式等待跳转
         # driver.implicitly_wait(1)
-        print(driver.contexts)
+        # print(driver.contexts)
+        try:
+            WebDriverWait(driver, 3, poll_frequency=0.5, ignored_exceptions=None).until(lambda x: x.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/cancel_btn")).click()
+        except:
+            print("暂无密码设置提示")
+        
 
     def test_login_fail(self): 
         pass
