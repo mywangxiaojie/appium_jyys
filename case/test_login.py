@@ -9,6 +9,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from start_session import driver
 
+import time
+
 
 class TestLogin(unittest.TestCase):
 
@@ -50,14 +52,39 @@ class TestLogin(unittest.TestCase):
         # 点击登录
         el6 = driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/login")
         el6.click()
-
-        # # 隐式等待跳转
-        # driver.implicitly_wait(1)
-        # print(driver.contexts)
+        
+        # 判断登录时是否会一直加载
+        while True:
+            try:
+                WebDriverWait(driver, 1, 0.5).until(lambda x: x.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/tv_loading"))
+            except:
+                break
+            else:
+                print("登录加载中......")
+                time.sleep(1)
+                continue
+        
         try:
-            WebDriverWait(driver, 3, poll_frequency=0.5, ignored_exceptions=None).until(lambda x: x.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/cancel_btn")).click()
+            # toast_element=driver.find_element(by=AppiumBy.XPATH, value='//*[@class="android.widget.Toast"]')
+            toast_element=WebDriverWait(driver, 1, 0.5).until(lambda x: x.find_element(by=AppiumBy.XPATH, value='//*[@class="android.widget.Toast"]'))
+        except:
+            pass
+        else:
+            print(toast_element.text)
+            driver.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/login").click()
+
+        try:
+            cancel_btn=WebDriverWait(driver, 3, 0.5).until(lambda x: x.find_element(by=AppiumBy.ID, value="com.ibb.tizi:id/cancel_btn"))
         except:
             print("暂无密码设置提示")
+        else:
+            cancel_btn.click()
+        
+       
+       # # 隐式等待跳转
+        # driver.implicitly_wait(1)
+        # print(driver.contexts)
+
         
 
     def test_login_fail(self): 

@@ -272,20 +272,34 @@ class TestOrderReserve(unittest.TestCase):
                         continue
 
                     try:
-                        img = img[int(int(bounds_list[1])/2160*h): int(int(bounds_list[3])/2160*h), int(int(bounds_list[0])/1080*w): int(int(bounds_list[2])/1080*w)]
-                        ocr = PaddleOCR(use_angle_cls=True, lang="ch")  # need to run only once to download and load model into memory
-                        result = ocr.ocr(img, cls=True)
-                    except:
-                        print("识别进厂时间出错......")
-                        reader = easyocr.Reader(['ch_sim','en']) # this needs to run only once to load the model into memory
-                        print("easyocr识别", reader.readtext(img))
-                        image_file=f'./tmp/{random_str(12)}.jpg'
-                        print(image_file)
+                        y1=int(int(bounds_list[1])/2160*h)
+                        y2=int(int(bounds_list[3])/2160*h)
+                        x1=int(int(bounds_list[0])/1080*w)
+                        x2=int(int(bounds_list[2])/1080*w)
+                        print(x1, y1, x2, y2)
+                        img = img[y1:y2, x1:x2]
+                        # ocr = PaddleOCR(use_angle_cls=True, lang="ch")  # need to run only once to download and load model into memory
+                        # result = ocr.ocr(img, cls=True)
+                        image_file=f'{random_str(12)}.jpg'
                         cv2.imwrite(image_file, img)
+                        # img不为None，通过img is None并不能判断，可以通过size属性进行判断
+                        # 除了不处理之外，还有一种解决办法，检查分割的行和列的数值是否合法，合法条件：
+                        # 分割的最小值不能小于0
+                        # 分割的最大值不能大于图片的宽和高
+                        # 分割的最大值要大于分割的最小值
+                        if img.size==0:
+                            print("无法获取预约进厂时间图片.......")
+                            continue
+                        reader = easyocr.Reader(['ch_sim','en']) # this needs to run only once to load the model into memory
+                        result=reader.readtext(img)
+                    except Exception as e:
+                        print("识别进厂时间出错......", e)
+                        # image_file=f'..\\tmp\\{random_str(12)}.jpg'
+                        print(image_file)
                         continue
                     else:
                         print(result)
-                        in_time=int(re.sub("[\:\-\s+]", "", result[0][1][1][0]))
+                        in_time=int(re.sub("[\:\-\s+]", "", result[1][1]))
                         print("预约进厂时间", in_time)
                         if result[0] is None or in_time < 202311031100 or in_time > 202311031200:
                             continue
@@ -321,7 +335,7 @@ def random_str(count:int)->str:
 def loading()->bool:
     try:
         # toast_element=driver.find_element(by=AppiumBy.XPATH, value='//*[@class="android.widget.Toast"]')
-        toast_element=WebDriverWait(driver, 1, 0.5).until(lambda x: x.find_element(by=AppiumBy.XPATH, value='//*[@class="android.widget.Toast"]')).click()
+        toast_element=WebDriverWait(driver, 1, 0.5).until(lambda x: x.find_element(by=AppiumBy.XPATH, value='//*[@class="android.widget.Toast"]'))
     except:
         return False
     else:

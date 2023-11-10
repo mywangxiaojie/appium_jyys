@@ -1,3 +1,4 @@
 # train.example
 tmp
 __pycache__
+*.jpg
